@@ -7,10 +7,18 @@ const sequelize = new Sequelize(
 );
 
 const models = {
-  user: sequelize.import(path.join(__dirname, file)),
+  user: sequelize.import("./user"),
+  team: sequelize.import("./team"),
+  message: sequelize.import("./message"),
+  member: sequelize.import("./member"),
+  channel: sequelize.import("./channel"),
 };
 
-Object.keys(models).forEach((modelName) => {});
+Object.keys(models).forEach((modelName) => {
+  if ("associate" in models[modelName]) {
+    models[modelName].associate(models);
+  }
+});
 
 models.sequelize = sequelize;
 models.sequelize = sequelize;
