@@ -1,17 +1,32 @@
-import { Sequelize } from "sequelize";
+"use strict";
 
-const sequelize = new Sequelize(
-  process.env.DATABASE_URL,
-  process.env.USER_NAME,
-  process.env.PASSWORD
-);
+import { basename as _basename, join } from "path";
+import Sequelize, { DataTypes } from "sequelize";
+const basename = _basename(__filename);
+const env = process.env.NODE_ENV || "development";
+const config = require(__dirname + "/../config/config.json")[env];
+import userCreateFunction from "./user";
+import channelCreateFunction from "./channel";
+import teamCreateFunction from "./team";
+import messageCreateFunction from "./message";
+
+let sequelize;
+if (config.use_env_variable) {
+  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+} else {
+  sequelize = new Sequelize(
+    config.database,
+    config.username,
+    config.password,
+    config
+  );
+}
 
 const models = {
-  user: sequelize.import("./user"),
-  team: sequelize.import("./team"),
-  message: sequelize.import("./message"),
-  member: sequelize.import("./member"),
-  channel: sequelize.import("./channel"),
+  User: userCreateFunction(sequelize, DataTypes),
+  Channel: channelCreateFunction(sequelize, DataTypes),
+  Team: teamCreateFunction(sequelize, DataTypes),
+  Message: messageCreateFunction(sequelize, DataTypes),
 };
 
 Object.keys(models).forEach((modelName) => {
@@ -21,6 +36,6 @@ Object.keys(models).forEach((modelName) => {
 });
 
 models.sequelize = sequelize;
-models.sequelize = sequelize;
+models.Sequelize = Sequelize;
 
 export default models;

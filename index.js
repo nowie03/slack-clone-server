@@ -6,16 +6,22 @@ import { SubscriptionServer } from "subscriptions-transport-ws";
 import { execute, subscribe } from "graphql";
 import { ApolloServer, gql } from "apollo-server-express";
 import { PubSub, withFilter } from "graphql-subscriptions";
-const { createServer } = require("http");
+import { Sequelize } from "sequelize";
+import { createServer } from "http";
 
 import typeDefs from "./graphql/schema";
 import resolvers from "./graphql/resolvers";
+import models from "./models";
 
 async function startApolloServer(typeDefs, resolvers) {
   const app = express();
   const httpServer = createServer(app);
   const schema = makeExecutableSchema({ typeDefs, resolvers });
   const pubsub = new PubSub();
+  // const sequelize = sequelize("slack", "root", "password", {
+  //   host: "localhost",
+  //   dialect: "mysql",
+  // });
 
   const server = new ApolloServer({
     schema,
@@ -58,10 +64,15 @@ async function startApolloServer(typeDefs, resolvers) {
 
   const PORT = 4000;
 
-  await new Promise((resolve) =>
-    httpServer.listen({ port: process.env.PORT || PORT }, resolve)
-  );
+  await new Promise((resolve) => {
+    httpServer.listen({ port: process.env.PORT || PORT }, resolve),
+      (reject) => {
+        console.log("unable to connect to database");
+      };
+  });
   console.log(`server ready at localhost:4000${server.graphqlPath}`);
 }
 
-startApolloServer(typeDefs, resolvers);
+models.sequelize.sync().then(() => {
+  startApolloServer(typeDefs, resolvers);
+});
