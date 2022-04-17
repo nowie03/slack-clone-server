@@ -18,6 +18,10 @@ export default (sequelize, dataTypes) => {
       through: "member",
       foreignKey: "userId",
     });
+    User.belongsToMany(models.Channel, {
+      through: "channel_member",
+      foreignKey: "userId",
+    });
   };
 
   return User;

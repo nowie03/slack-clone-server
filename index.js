@@ -8,24 +8,32 @@ import { ApolloServer, gql } from "apollo-server-express";
 import { PubSub, withFilter } from "graphql-subscriptions";
 import { Sequelize } from "sequelize";
 import { createServer } from "http";
-
-import typeDefs from "./graphql/schema";
-import resolvers from "./graphql/resolvers";
+import { fileLoader, mergeTypes, mergeResolvers } from "merge-graphql-schemas";
 import models from "./models";
+import path from "path";
+
+const resolvers = mergeResolvers(
+  fileLoader(path.join(__dirname, "./graphql/resolvers"))
+);
+const typeDefs = mergeTypes(
+  fileLoader(path.join(__dirname, "./graphql/schemas"))
+);
 
 async function startApolloServer(typeDefs, resolvers) {
   const app = express();
   const httpServer = createServer(app);
   const schema = makeExecutableSchema({ typeDefs, resolvers });
   const pubsub = new PubSub();
-  // const sequelize = sequelize("slack", "root", "password", {
-  //   host: "localhost",
-  //   dialect: "mysql",
-  // });
 
   const server = new ApolloServer({
     schema,
-    context: () => ({ pubsub }),
+    context: () => ({
+      pubsub,
+      models,
+      user: {
+        id: 5,
+      },
+    }),
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       {

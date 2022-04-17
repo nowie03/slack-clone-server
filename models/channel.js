@@ -12,6 +12,11 @@ export default (sequelize, dataTypes) => {
     Channel.belongsTo(models.Team, {
       foreignKey: "teamId",
     });
+
+    Channel.belongsToMany(models.User, {
+      through: "channel_memebr",
+      foreignKey: "channelId",
+    });
   };
 
   return Channel;
