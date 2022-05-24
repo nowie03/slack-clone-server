@@ -9,7 +9,12 @@ export default gql`
     channels: [Channel!]!
   }
 
+  type CreateTeamResponse {
+    status: Boolean!
+    errors: [Error]
+  }
+
   type Mutation {
-    createTeam(name: String!): Boolean!
+    createTeam(name: String!): CreateTeamResponse!
   }
 `;

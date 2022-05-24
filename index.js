@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import bodyParser from "body-parser";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
@@ -11,6 +12,11 @@ import { createServer } from "http";
 import { fileLoader, mergeTypes, mergeResolvers } from "merge-graphql-schemas";
 import models from "./models";
 import path from "path";
+import verifyUser from "./middlewares/verifyUser";
+import { applyMiddleware } from "graphql-middleware";
+
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 const resolvers = mergeResolvers(
   fileLoader(path.join(__dirname, "./graphql/resolvers"))
@@ -27,13 +33,16 @@ async function startApolloServer(typeDefs, resolvers) {
 
   const server = new ApolloServer({
     schema,
-    context: () => ({
-      pubsub,
-      models,
-      user: {
-        id: 5,
-      },
-    }),
+    context: async ({ req, res }) => {
+      // await verifyUser(req, res);
+      return {
+        pubsub,
+        models,
+        user: req.user,
+        ACCESS_TOKEN_SECRET,
+        REFRESH_TOKEN_SECRET,
+      };
+    },
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       {
