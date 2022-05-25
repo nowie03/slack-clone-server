@@ -11,13 +11,45 @@ export default {
     getAllUsers: (parent, args, { models }, info) => {
       return models.User.findAll();
     },
-    verifyUser:(parent,{accessToken,refreshToken},{models},info)=>{
-      try{
-        const {user}=jwt.verify(accessToken,process.env.ACCESS_TOKEN_SECRET);
-      }catch(error){
-        const 
+    verifyUser: async (
+      parent,
+      { accessToken, refreshToken },
+      { models },
+      info
+    ) => {
+      try {
+        const { user } = jwt.verify(
+          accessToken,
+          process.env.ACCESS_TOKEN_SECRET
+        );
+      } catch (error) {
+        //accessToken invalid
+        try {
+          jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+          const {
+            user: { id },
+          } = jwt.decode(refreshToken);
+
+          const user = await models.findOne({ where: { id: id } });
+          console.log(user);
+          if (!user) {
+            //if the user is hoax
+            return {
+              status: false,
+            };
+          }
+        } catch (error) {
+          //refresh Token also invalid
+          console.log(error);
+          return {
+            status: false,
+          };
+        }
       }
-    }
+      return {
+        status: true,
+      };
+    },
   },
   Mutation: {
     register: async (parent, { password, ...otherArgs }, { models }, info) => {
@@ -96,11 +128,11 @@ export default {
 
       //if both are valid then create token and refresh token using jwt and send it as response
       const accessToken = jwt.sign({ user: user }, ACCESS_TOKEN_SECRET, {
-        expiresIn: "1m",
+        expiresIn: "30m",
       });
 
       const refreshToken = jwt.sign({ user: user }, REFRESH_TOKEN_SECRET, {
-        expiresIn: "1m",
+        expiresIn: "30m",
       });
 
       return {

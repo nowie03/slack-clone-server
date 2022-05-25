@@ -9,11 +9,6 @@ export default gql`
     teams: [Team!]!
   }
 
-  type Query {
-    getUser(id: Int!): User!
-    getAllUsers: [User!]!
-  }
-
   type RegisterResponse {
     status: Boolean!
     user: User
@@ -25,6 +20,16 @@ export default gql`
     errors: [Error]
     accessToken: String
     refreshToken: String
+  }
+
+  type verifyResponse {
+    status: Boolean!
+  }
+
+  type Query {
+    getUser(id: Int!): User!
+    getAllUsers: [User!]!
+    verifyUser(accessToken: String, refreshToken: String): verifyResponse!
   }
 
   type Mutation {
