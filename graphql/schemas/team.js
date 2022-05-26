@@ -14,6 +14,10 @@ export default gql`
     errors: [Error]
   }
 
+  type Query {
+    getTeams: [Team!]
+  }
+
   type Mutation {
     createTeam(name: String!): CreateTeamResponse!
   }

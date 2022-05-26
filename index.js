@@ -1,19 +1,16 @@
 import "dotenv/config";
 import express from "express";
-import bodyParser from "body-parser";
 import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { SubscriptionServer } from "subscriptions-transport-ws";
 import { execute, subscribe } from "graphql";
 import { ApolloServer, gql } from "apollo-server-express";
-import { PubSub, withFilter } from "graphql-subscriptions";
-import { Sequelize } from "sequelize";
+import { PubSub } from "graphql-subscriptions";
 import { createServer } from "http";
 import { fileLoader, mergeTypes, mergeResolvers } from "merge-graphql-schemas";
 import models from "./models";
 import path from "path";
-import verifyUser from "./middlewares/verifyUser";
-import { applyMiddleware } from "graphql-middleware";
+import auth from "./middlewares/auth";
 
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
@@ -34,13 +31,11 @@ async function startApolloServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     schema,
     context: async ({ req, res }) => {
-      // await verifyUser(req, res);
+      await auth(req, res);
       return {
         pubsub,
         models,
         user: req.user,
-        ACCESS_TOKEN_SECRET,
-        REFRESH_TOKEN_SECRET,
       };
     },
     plugins: [

@@ -3,15 +3,15 @@ import models from "../models";
 
 export default async (req, res) => {
   const accessToken = req.headers.accesstoken;
-  console.log(req.headers);
+
   try {
     //check if accessToken is valid
     const { user } = jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET);
     req.user = user;
   } catch (error) {
     //if accessToken is invalid then it might have been expired
+    console.log("ACCESS TOKEN EXPIRED");
     const refreshToken = req.headers.refreshtoken;
-    console.log(error);
     try {
       //verify if the refreshToken is valid
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
@@ -31,18 +31,20 @@ export default async (req, res) => {
       req.user = user;
 
       //create new accessToken and refresh token and attach it to the response object
-      const newAccessToken = jwt.sign({ user: user }, ACCESS_TOKEN_SECRET, {
-        expiresIn: "24h",
-      });
+      const newAccessToken = jwt.sign(
+        { user: user },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: process.env.ACCESS_TOKEN_EXPIRATION,
+        }
+      );
 
-      const newRefreshToken = jwt.sign({ user: user }, REFRESH_TOKEN_SECRET, {
-        expiresIn: "7d",
+      res.set({
+        "Access-Control-Expose-Headers": "newAccessToken",
+        newAccessToken,
       });
-
-      res.set("Access-Control-Expose-Headers", "accessToken ,refreshToken");
-      res.set("accessToken", newAccessToken);
-      res.set("refreshToken", newRefreshToken);
     } catch (error) {
+      console.log("REFRESH TOKEN EXPIRED");
       return;
     }
   }

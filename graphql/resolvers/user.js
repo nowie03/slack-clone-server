@@ -14,7 +14,7 @@ export default {
     verifyUser: async (
       parent,
       { accessToken, refreshToken },
-      { models },
+      { models, user },
       info
     ) => {
       try {
@@ -30,7 +30,7 @@ export default {
             user: { id },
           } = jwt.decode(refreshToken);
 
-          const user = await models.findOne({ where: { id: id } });
+          const user = await models.User.findOne({ where: { id: id } });
           console.log(user);
           if (!user) {
             //if the user is hoax
@@ -38,6 +38,18 @@ export default {
               status: false,
             };
           }
+          //accessToken is invalid but refresh token is there
+          const newAccessToken = jwt.sign(
+            { user: user },
+            process.env.ACCESS_TOKEN_SECRET,
+            {
+              expiresIn: process.env.ACCESS_TOKEN_EXPIRATION,
+            }
+          );
+          return {
+            status: true,
+            accessToken: newAccessToken,
+          };
         } catch (error) {
           //refresh Token also invalid
           console.log(error);
@@ -87,12 +99,7 @@ export default {
         };
       }
     },
-    login: async (
-      parent,
-      { email, password },
-      { models, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET },
-      info
-    ) => {
+    login: async (parent, { email, password }, { models }, info) => {
       //check mail and return a login response
       const user = await models.User.findOne({ where: { email } });
 
@@ -127,13 +134,21 @@ export default {
       }
 
       //if both are valid then create token and refresh token using jwt and send it as response
-      const accessToken = jwt.sign({ user: user }, ACCESS_TOKEN_SECRET, {
-        expiresIn: "30m",
-      });
+      const accessToken = jwt.sign(
+        { user: user },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+          expiresIn: process.env.ACCESS_TOKEN_EXPIRATION,
+        }
+      );
 
-      const refreshToken = jwt.sign({ user: user }, REFRESH_TOKEN_SECRET, {
-        expiresIn: "30m",
-      });
+      const refreshToken = jwt.sign(
+        { user: user },
+        process.env.REFRESH_TOKEN_SECRET,
+        {
+          expiresIn: "5m",
+        }
+      );
 
       return {
         status: true,

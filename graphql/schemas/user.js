@@ -24,6 +24,7 @@ export default gql`
 
   type verifyResponse {
     status: Boolean!
+    accessToken:String
   }
 
   type Query {
