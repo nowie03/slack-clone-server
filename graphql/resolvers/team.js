@@ -22,9 +22,11 @@ export default {
     createTeam: async (parent, args, { models, user }, info) => {
       console.log(user);
       try {
-        await models.Team.create({ ...args, owner: user.id });
+        const team=await models.Team.create({ ...args, owner: user.id });
+        await models.Channel.create({name:"general",public:true,teamId:team.id})
         return {
           status: true,
+          team:team
         };
       } catch (err) {
         console.log(err);
@@ -35,4 +37,7 @@ export default {
       }
     },
   },
+  Team:{
+    channels:async ({id},args,{models},info)=> await models.Channel.findAll({where:{teamId:id}})
+  }
 };
