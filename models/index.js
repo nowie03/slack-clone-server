@@ -9,6 +9,7 @@ import userCreateFunction from "./user";
 import channelCreateFunction from "./channel";
 import teamCreateFunction from "./team";
 import messageCreateFunction from "./message";
+import memberCreateFunction from "./member";
 
 let sequelize;
 if (config.use_env_variable) {
@@ -27,6 +28,7 @@ const models = {
   Channel: channelCreateFunction(sequelize, DataTypes),
   Team: teamCreateFunction(sequelize, DataTypes),
   Message: messageCreateFunction(sequelize, DataTypes),
+  Member: memberCreateFunction(sequelize),
 };
 
 Object.keys(models).forEach((modelName) => {
