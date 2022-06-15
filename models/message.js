@@ -10,6 +10,10 @@ export default (sequelize, dataTypes) => {
       foreignKey: "channelId",
     });
 
+    Message.belongsTo(models.PrivateChat, {
+      foreignKey: "privateChatId",
+    });
+
     Message.belongsTo(models.User, {
       foreignKey: "userId",
     });

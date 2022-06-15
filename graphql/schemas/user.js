@@ -24,12 +24,14 @@ export default gql`
 
   type verifyResponse {
     status: Boolean!
-    accessToken:String
+    accessToken: String
   }
 
   type Query {
     getUser(id: Int!): User!
+    getUserByMail(email: String!): User!
     getAllUsers: [User!]!
+    isUserPartOfTeam(userId: Int!, teamId: Int!): Boolean!
     verifyUser(accessToken: String, refreshToken: String): verifyResponse!
   }
 

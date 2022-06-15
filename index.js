@@ -4,6 +4,8 @@ import { ApolloServerPluginDrainHttpServer } from "apollo-server-core";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { SubscriptionServer } from "subscriptions-transport-ws";
 import { execute, subscribe } from "graphql";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
 import { ApolloServer, gql } from "apollo-server-express";
 import { PubSub } from "graphql-subscriptions";
 import { createServer } from "http";
@@ -11,9 +13,7 @@ import { fileLoader, mergeTypes, mergeResolvers } from "merge-graphql-schemas";
 import models from "./models";
 import path from "path";
 import auth from "./middlewares/auth";
-
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
+const pubsub = new PubSub();
 
 const resolvers = mergeResolvers(
   fileLoader(path.join(__dirname, "./graphql/resolvers"))
@@ -25,8 +25,24 @@ const typeDefs = mergeTypes(
 async function startApolloServer(typeDefs, resolvers) {
   const app = express();
   const httpServer = createServer(app);
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/graphql",
+  });
   const schema = makeExecutableSchema({ typeDefs, resolvers });
-  const pubsub = new PubSub();
+
+  const serverCleanup = useServer(
+    {
+      schema,
+      context: (ctx, msg, args) => {
+        return {
+          pubsub,
+          models,
+        };
+      },
+    },
+    wsServer
+  );
 
   const server = new ApolloServer({
     schema,
@@ -54,25 +70,7 @@ async function startApolloServer(typeDefs, resolvers) {
   await server.start();
   server.applyMiddleware({
     app,
-    path: "/",
   });
-
-  const subscriptionServer = SubscriptionServer.create(
-    {
-      schema,
-      execute,
-      subscribe,
-      async onConnect(connectionParams, webSocket) {
-        console.log("connected");
-        return { pubsub };
-      },
-      async onDisconnect(connectionParams, webSocket) {},
-    },
-    {
-      server: httpServer,
-      path: "/graphql",
-    }
-  );
 
   const PORT = 4000;
 

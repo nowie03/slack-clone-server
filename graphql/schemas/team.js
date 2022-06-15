@@ -21,8 +21,22 @@ export default gql`
     errors: [Error]
   }
 
+  type PrivateChat{
+    user:User!
+    privateChatId:Int!
+  }
+
+  type GetTeamsResponse {
+    id: Int!
+    name: String!
+    owner: User
+    members: [User!]!
+    channels: [Channel!]!
+    privateChats: [PrivateChat]
+  }
+
   type Query {
-    getTeams: [Team!]
+    getTeams: [GetTeamsResponse!]
   }
 
   type Mutation {

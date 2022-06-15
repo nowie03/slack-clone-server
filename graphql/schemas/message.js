@@ -6,9 +6,31 @@ export default gql`
     text: String
     user: User
     channel: Channel
+    createdAt: String
+  }
+
+  type CreateMessageResponse {
+    status: Boolean!
+    errors: [Error]
+    message: Message
+  }
+
+  type Query {
+    getChannelMessages(channelId: Int!): [Message]!
+    getPrivateChatMessages(privateChatId: Int!): [Message]!
+  }
+
+  type Subscription {
+    channelMessageCreated(channelId: Int!): Message!
+    privateChatMessageCreated(privateChatId: Int!): Message!
   }
 
   type Mutation {
-    createMessage(text: String!, channelId: Int!): Boolean!
+    createChannelMessage(text: String!, channelId: Int!): CreateMessageResponse!
+    createPrivateChatMessage(
+      text: String!
+      privateChatId: Int!
+      userId: Int!
+    ): CreateMessageResponse!
   }
 `;

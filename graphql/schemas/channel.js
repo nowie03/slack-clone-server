@@ -15,11 +15,19 @@ export default gql`
     channel:Channel
   }
 
+  type AddUserToChannelResponse{
+    status:Boolean!
+    errors: [Error]
+    user:User
+
+  }
+
   type Mutation {
     createChannel(
       teamId: Int!
       name: String!
       public: Boolean = false
     ): CreateChannelResponse!
+    addUserToChannel(userId:Int!,channelId:Int!,teamId:Int!):AddUserToChannelResponse!
   }
 `;

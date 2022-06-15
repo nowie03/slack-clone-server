@@ -5,11 +5,18 @@ import "dotenv";
 
 export default {
   Query: {
-    getUser: (parent, { id }, { models }, info) => {
-      return models.User.findOne({ where: { id } });
+    isUserPartOfTeam: async (parent, { userId, teamId }, { models }, info) => {
+      const response=await models.Member.findOne({where:{teamId,userId}});
+      return !!response;
     },
-    getAllUsers: (parent, args, { models }, info) => {
-      return models.User.findAll();
+    getUser: async (parent, { id }, { models }, info) => {
+      return await models.User.findOne({ where: { id } });
+    },
+    getUserByMail: async (parent, { email }, { models }, info) => {
+      return await models.User.findOne({ where: { email } });
+    },
+    getAllUsers: async (parent, args, { models }, info) => {
+      return await models.User.findAll();
     },
     verifyUser: async (
       parent,
@@ -79,13 +86,16 @@ export default {
       }
       const hashedPassword = await bcrypt.hash(password, 12);
       try {
-        const user = await models.User.create({
-          password: hashedPassword,
-          ...otherArgs,
+        const response = await models.sequelize.transaction(async (t) => {
+          const user = await models.User.create({
+            password: hashedPassword,
+            ...otherArgs,
+          });
+          return user;
         });
         return {
           status: true,
-          user: user,
+          user: response,
         };
       } catch (error) {
         return {
@@ -146,7 +156,7 @@ export default {
         { user: user },
         process.env.REFRESH_TOKEN_SECRET,
         {
-          expiresIn: "5m",
+          expiresIn: process.env.REFRESH_TOKEN_EXPIRATION,
         }
       );
 

@@ -2,6 +2,9 @@ export default (sequelize, dataTypes) => {
   const Channel = sequelize.define("channel", {
     name: {
       type: dataTypes.STRING,
+      validate: {
+        notEmpty: true,
+      },
     },
     public: {
       type: dataTypes.BOOLEAN,

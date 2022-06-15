@@ -10,6 +10,9 @@ import channelCreateFunction from "./channel";
 import teamCreateFunction from "./team";
 import messageCreateFunction from "./message";
 import memberCreateFunction from "./member";
+import privateChatCreateFunction from "./privateChat";
+import privateChatMemberCreateFunction from "./privateChatMember";
+import ChannelMemberCreateFunction from "./channelMember";
 
 let sequelize;
 if (config.use_env_variable) {
@@ -29,6 +32,9 @@ const models = {
   Team: teamCreateFunction(sequelize, DataTypes),
   Message: messageCreateFunction(sequelize, DataTypes),
   Member: memberCreateFunction(sequelize),
+  PrivateChat: privateChatCreateFunction(sequelize, DataTypes),
+  PrivateChatMember: privateChatMemberCreateFunction(sequelize, DataTypes),
+  ChannelMember: ChannelMemberCreateFunction(sequelize),
 };
 
 Object.keys(models).forEach((modelName) => {

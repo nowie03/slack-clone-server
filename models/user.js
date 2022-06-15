@@ -38,6 +38,10 @@ export default (sequelize, dataTypes) => {
       through: "channel_member",
       foreignKey: "userId",
     });
+    User.belongsToMany(models.PrivateChat, {
+      through: "private_chat_member",
+      foreignKey: "userId",
+    });
   };
 
   return User;
