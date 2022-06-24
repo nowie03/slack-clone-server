@@ -9,17 +9,26 @@ export default gql`
     users: [User!]!
   }
 
-  type CreateChannelResponse{
-    status:Boolean!
-    errors:[Error!]
-    channel:Channel
+  type CreateChannelResponse {
+    status: Boolean!
+    errors: [Error!]
+    channel: Channel
   }
 
-  type AddUserToChannelResponse{
-    status:Boolean!
-    errors: [Error]
-    user:User
+  type AddUserToChannelResponse {
+    status: Boolean!
+    errors: [Error!]
+    user: User
+  }
 
+  type Query {
+    getChannels(teamId: Int!): [Channel!]
+    getChannelMembers(channelId: Int!): [User!]
+  }
+
+  type Subscription {
+    channelCreated(teamId: Int!): Channel!
+    newUserAddedToChannel(channelId: Int!): User!
   }
 
   type Mutation {
@@ -28,6 +37,10 @@ export default gql`
       name: String!
       public: Boolean = false
     ): CreateChannelResponse!
-    addUserToChannel(userId:Int!,channelId:Int!,teamId:Int!):AddUserToChannelResponse!
+    addUserToChannel(
+      email: String!
+      channelId: Int!
+      teamId: Int!
+    ): AddUserToChannelResponse!
   }
 `;

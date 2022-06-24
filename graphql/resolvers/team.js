@@ -1,4 +1,5 @@
 import { Op, QueryTypes } from "sequelize";
+import { withFilter } from "graphql-subscriptions";
 
 export default {
   PrivateChat: {
@@ -21,6 +22,16 @@ export default {
         const user = await models.User.findOne({ where: { id: userId } });
         return user;
       });
+    },
+  },
+  Subscription: {
+    newUserAddedToTeam: {
+      subscribe: withFilter(
+        (parent, args, { pubsub }, info) =>
+          pubsub.asyncIterator(["NEW_USER_ADDED_TO_TEAM"]),
+        (payload, variables) =>
+          payload.newUserAddedToTeam.teamId === variables.teamId
+      ),
     },
   },
   Query: {
@@ -53,6 +64,18 @@ export default {
         console.log(err);
       }
     },
+    getMembers: async (parent, { teamId }, { models }, info) => {
+      const members = await models.Member.findAll({
+        where: {
+          teamId,
+        },
+      });
+
+      return members.map(
+        async ({ userId }) =>
+          await models.User.findOne({ where: { id: userId } })
+      );
+    },
   },
   Mutation: {
     createTeam: async (parent, args, { models, user }, info) => {
@@ -64,10 +87,14 @@ export default {
             userId: user.id,
             teamId: team.id,
           });
-          await models.Channel.create({
+          const channel = await models.Channel.create({
             name: "general",
             public: true,
             teamId: team.id,
+          });
+          await models.ChannelMember.create({
+            userId: user.id,
+            channelId: channel.id,
           });
           return team;
         });
@@ -86,7 +113,7 @@ export default {
     addUserToTeam: async (
       parent,
       { teamId, email },
-      { models, user },
+      { models, user, pubsub },
       info
     ) => {
       try {
@@ -124,29 +151,59 @@ export default {
             where: { teamId: team.id },
           });
 
-          membersOfTeam.forEach(async (member) => {
-            if (member.dataValues.userId !== userToAdd.id) {
-              const privateChat = await models.PrivateChat.create({ teamId });
-              //add users to private chat
-              await Promise.all([
-                models.PrivateChatMember.create({
-                  userId: member.dataValues.userId,
-                  privateChatId: privateChat.id,
-                }),
-                models.PrivateChatMember.create({
-                  userId: userToAdd.id,
-                  privateChatId: privateChat.id,
-                }),
-              ]);
-            }
+          //create a private chat between every memebers of team
+          // membersOfTeam.forEach(async (member) => {
+          //   if (member.dataValues.userId !== userToAdd.id) {
+          //     const privateChat = await models.PrivateChat.create({ teamId });
+          //     //add users to private chat
+          //     await Promise.all([
+          //       models.PrivateChatMember.create({
+          //         userId: member.dataValues.userId,
+          //         privateChatId: privateChat.id,
+          //       }),
+          //       models.PrivateChatMember.create({
+          //         userId: userToAdd.id,
+          //         privateChatId: privateChat.id,
+          //       }),
+          //     ]);
+          //   }
+          // });
+
+          //add user to genral channel by default
+          const genralChannel = await models.Channel.findOne({
+            where: {
+              teamId: team.id,
+              name: "general",
+            },
           });
-          //TODO: after adding a member to team create private channel for every member to newly added member
+
+          await models.ChannelMember.create({
+            userId: userToAdd.id,
+            channelId: genralChannel.dataValues.id,
+          });
+
+          console.log({ userToAdd });
+          
+          pubsub.publish("NEW_USER_ADDED_TO_CHANNEL", {
+            channelId: genralChannel.dataValues.id,
+            newUserAddedToChannel: {
+              ...userToAdd.dataValues,
+            },
+          });
+
+          pubsub.publish("NEW_USER_ADDED_TO_TEAM", {
+            teamId: team.dataValues.id,
+            newUserAddedToTeam: {
+              ...userToAdd.dataValues,
+            },
+          });
 
           return {
             status: true,
             user: userToAdd,
           };
         } else {
+          console.log(team.owner === user.id);
           return {
             status: false,
             errors: [

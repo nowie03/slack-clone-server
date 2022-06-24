@@ -37,6 +37,11 @@ export default gql`
 
   type Query {
     getTeams: [GetTeamsResponse!]
+    getMembers(teamId:Int!):[User!]
+  }
+
+  type Subscription{
+    newUserAddedToTeam(teamId:Int!):User!
   }
 
   type Mutation {

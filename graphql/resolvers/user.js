@@ -6,14 +6,28 @@ import "dotenv";
 export default {
   Query: {
     isUserPartOfTeam: async (parent, { userId, teamId }, { models }, info) => {
-      const response=await models.Member.findOne({where:{teamId,userId}});
+      const response = await models.Member.findOne({
+        where: { teamId, userId },
+      });
+      return !!response;
+    },
+    isUserPartOfChannel: async (
+      parent,
+      { userId, channelId },
+      { models },
+      info
+    ) => {
+      const response = await models.ChannelMember.findOne({
+        where: { channelId, userId },
+      });
       return !!response;
     },
     getUser: async (parent, { id }, { models }, info) => {
       return await models.User.findOne({ where: { id } });
     },
     getUserByMail: async (parent, { email }, { models }, info) => {
-      return await models.User.findOne({ where: { email } });
+      const response =await models.User.findOne({ where: { email } });
+      return response;
     },
     getAllUsers: async (parent, args, { models }, info) => {
       return await models.User.findAll();

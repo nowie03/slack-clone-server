@@ -16,6 +16,7 @@ export default {
         (parent, args, { pubsub }, info) =>
           pubsub.asyncIterator(["CHANNEL_MESSAGE_CREATED"]),
         (payload, variables) => {
+          console.log(payload);
           return (
             payload.channelMessageCreated.channelId === variables.channelId
           );

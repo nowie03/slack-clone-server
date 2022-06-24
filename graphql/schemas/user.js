@@ -28,10 +28,11 @@ export default gql`
   }
 
   type Query {
-    getUser(id: Int!): User!
-    getUserByMail(email: String!): User!
-    getAllUsers: [User!]!
+    getUser(id: Int!): User
+    getUserByMail(email: String!): User
+    getAllUsers: [User]!
     isUserPartOfTeam(userId: Int!, teamId: Int!): Boolean!
+    isUserPartOfChannel(userId: Int!,channelId: Int!):Boolean!
     verifyUser(accessToken: String, refreshToken: String): verifyResponse!
   }
 
